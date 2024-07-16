@@ -8,6 +8,7 @@ pub struct CreateReq {
     pub schema: Value,
     #[serde(default, deserialize_with = "deserialize_option")]
     pub function_name: Option<Value>,
+    pub mandatory: Option<bool>,
 }
 
 fn deserialize_option<'de, D>(deserializer: D) -> Result<Option<Value>, D::Error>

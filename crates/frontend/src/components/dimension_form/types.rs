@@ -7,4 +7,5 @@ pub struct DimensionCreateReq {
     pub priority: u32,
     pub schema: Value,
     pub function_name: Option<Value>,
+    pub mandatory: bool,
 }

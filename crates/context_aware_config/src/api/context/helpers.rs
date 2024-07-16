@@ -22,6 +22,29 @@ use serde_json::{Map, Value};
 use std::collections::HashMap;
 type DBConnection = PooledConnection<ConnectionManager<PgConnection>>;
 
+pub fn validate_condition_with_mandatory_dimensions(
+    conn: &mut DBConnection,
+    context: &Value,
+) -> superposition::Result<()> {
+    use dimensions::dsl;
+    let context_map = extract_dimensions(context)?;
+    let dimensions_list: Vec<String> = context_map.keys().cloned().collect();
+    let mandatory_dimensions: Vec<String> = dsl::dimensions
+        .filter(dsl::mandatory.eq(true))
+        .select(dsl::dimension)
+        .load(conn)?;
+    let all_mandatory_present = mandatory_dimensions
+        .iter()
+        .all(|dimension| dimensions_list.contains(dimension));
+    if !all_mandatory_present {
+        return Err(validation_error!(
+            "The context should contain all the mandatory dimensions : {:?}.",
+            mandatory_dimensions,
+        ));
+    }
+    Ok(())
+}
+
 pub fn validate_condition_with_functions(
     conn: &mut DBConnection,
     context: &Value,

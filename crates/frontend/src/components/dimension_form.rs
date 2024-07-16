@@ -4,7 +4,10 @@ pub mod utils;
 use self::types::DimensionCreateReq;
 use self::utils::create_dimension;
 use crate::api::fetch_types;
-use crate::components::dropdown::{Dropdown, DropdownBtnType, DropdownDirection};
+use crate::components::{
+    dropdown::{Dropdown, DropdownBtnType, DropdownDirection},
+    input_components::BooleanToggle,
+};
 use crate::types::{FunctionsName, TypeTemplate};
 use crate::{api::fetch_functions, components::button::Button};
 use leptos::*;
@@ -19,6 +22,7 @@ pub fn dimension_form<NF>(
     #[prop(default = String::new())] dimension_name: String,
     #[prop(default = String::new())] dimension_type: String,
     #[prop(default = Value::Null)] dimension_schema: Value,
+    #[prop(default = false)] mandatory: bool,
     #[prop(default = None)] function_name: Option<Value>,
     handle_submit: NF,
 ) -> impl IntoView
@@ -31,6 +35,7 @@ where
     let (dimension_name_rs, dimension_name_ws) = create_signal(dimension_name);
     let (dimension_type_rs, dimension_type_ws) = create_signal(dimension_type);
     let (dimension_schema_rs, dimension_schema_ws) = create_signal(dimension_schema);
+    let (is_mandatory, set_mandatory) = create_signal(mandatory);
     let (function_name, set_function_name) = create_signal(function_name);
 
     let string_to_value_closure = |val: String| {
@@ -83,7 +88,7 @@ where
         let f_priority = priority.get();
         let f_name = dimension_name_rs.get();
         let fun_name = function_name.get();
-
+        let mandatory = is_mandatory.get();
         let f_schema = dimension_schema_rs.get();
 
         let payload = DimensionCreateReq {
@@ -91,6 +96,7 @@ where
             priority: f_priority,
             schema: f_schema,
             function_name: fun_name,
+            mandatory,
         };
 
         let handle_submit_clone = handle_submit.clone();
@@ -171,7 +177,7 @@ where
                             <textarea
                                 type="text"
                                 placeholder="Enter a JSON schema"
-                                class="input input-bordered mt-5 rounded-md resize-y w-full max-w-md"
+                                class="input input-bordered mt-5 rounded-md resize-y w-full max-w-md pt-3"
                                 rows=8
                                 on:change=move |ev| {
                                     dimension_schema_ws
@@ -209,8 +215,9 @@ where
                                     ev.prevent_default();
                                 }
                             }
+
                             on:change=move |ev| {
-                                logging::log!("{:?}", event_target_value(&ev).parse::<u32>());
+                                logging::log!("{:?}", event_target_value(& ev).parse::< u32 > ());
                                 match event_target_value(&ev).parse::<u32>() {
                                     Ok(i_prio) => set_priority.set(i_prio),
                                     Err(e) => {
@@ -224,6 +231,21 @@ where
                     </div>
                 }
             }}
+
+            <div class="flex mt-4 mb-4">
+                <label class="label">
+                    <span class="label-text">Mandatory</span>
+                </label>
+                <BooleanToggle
+                    config_value=is_mandatory.get()
+                    class=String::from("mt-1 ml-4")
+                    update_value=Callback::new(move |flag: bool| {
+                        logging::log!("<<>> flag recieved {}", flag);
+                        set_mandatory.set(flag);
+                    })
+                />
+
+            </div>
 
             <Suspense>
                 {move || {

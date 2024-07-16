@@ -45,7 +45,8 @@ use std::collections::HashMap;
 use superposition_types::{SuperpositionUser, User};
 
 use super::helpers::{
-    validate_condition_with_functions, validate_override_with_functions,
+    validate_condition_with_functions, validate_condition_with_mandatory_dimensions,
+    validate_override_with_functions,
 };
 
 use superposition_macros::{
@@ -194,6 +195,7 @@ fn create_ctx_from_put_req(
 ) -> superposition::Result<Context> {
     let ctx_condition = Value::Object(req.context.to_owned());
     let ctx_override: Value = req.r#override.to_owned().into();
+    validate_condition_with_mandatory_dimensions(conn, &ctx_condition)?;
     validate_override_with_default_configs(conn, &req.r#override)?;
     validate_condition_with_functions(conn, &ctx_condition)?;
     validate_override_with_functions(conn, &req.r#override)?;
